@@ -1,2 +1,2 @@
-# Probabilistic_Inference
-For learning and exploring Probabilistic Inference
+# Active Inference Implementations
+Repository of existing computational implementations of active inference models.
