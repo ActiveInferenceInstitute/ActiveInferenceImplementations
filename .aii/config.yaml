@@ -1,0 +1,43 @@
+# AII sidecar — InstituteOS metadata. Schema: instituteos.platform.aii_sidecar
+meta:
+  updated: '2026-06-30'
+repo:
+  name: ActiveInferenceImplementations
+  slug: activeinferenceimplementations
+  full_name: ActiveInferenceInstitute/ActiveInferenceImplementations
+  description: For learning and exploring Probabilistic Inference
+institute:
+  category: research-software
+  steward: Active Inference Institute
+ecosystem:
+  relations:
+  - repo: ActiveInferenceInstitute/InstituteOS
+    relation: referenced-by
+    note: Federated via the InstituteOS .aii manifest.
+  - repo: ActiveInferenceInstitute/Active_Inference_Ontology
+    note: Uses Active Inference Ontology terms.
+  links:
+    github: https://github.com/ActiveInferenceInstitute/ActiveInferenceImplementations
+    website: https://www.activeinference.org
+artifacts:
+- path: README.md
+  kind: doc
+  description: Repository overview.
+provenance:
+  license: CC-BY-4.0
+  citation:
+    text: Active Inference Institute — ActiveInferenceImplementations.
+instituteos:
+  tags:
+  - activeinferenceimplementations
+  - learning
+  - exploring
+  - probabilistic
+  - inference
+  - jupyter notebook
+capabilities:
+- notebooks
+tasks:
+  inventory:
+    cmd: git ls-files
+    description: List tracked files.
