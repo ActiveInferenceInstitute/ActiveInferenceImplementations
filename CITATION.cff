@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this repository in your work, please cite it as follows."
+title: "Active Inference Implementations"
+abstract: >-
+  Educational notebooks implementing and exploring probabilistic inference and
+  active inference methods, including RxInfer.jl tutorials on Bayesian
+  inference on factor graphs by message passing. Maintained by the Active
+  Inference Institute.
+type: software
+authors:
+  - name: "Active Inference Institute"
+    website: https://www.activeinference.org
+date-released: "2022-11-09"
+license: CC-BY-4.0
+repository-code: https://github.com/ActiveInferenceInstitute/ActiveInferenceImplementations
+keywords:
+  - active inference
+  - probabilistic inference
+  - message passing
+  - bayesian inference
+  - julia
+  - jupyter notebook
