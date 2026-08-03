@@ -29,7 +29,7 @@ Mega-deep documentation review of `ActiveInferenceImplementations` (docs-deep pa
   - `inference` function → `https://docs.rxinfer.com/stable/manuals/inference/overview/` (anchor `#user-guide-inference-execution`)
   - VMP / manual inference → `https://docs.rxinfer.com/stable/concepts/variational-inference/`
 - **M5** `01_message_passing.ipynb` has almost no prose: title + one link only. No explanation of the model, the mean-field constraint, or what the plots show.
-- **M6** `00_intro.ipynb` ends with an empty code cell (cell 22) — dead weight.
+- **M6** Both notebooks end with an empty code cell (00_intro cell 22; 01_message_passing last cell) — dead weight.
 - **M7** API drift: notebooks use the legacy `inference(...)` entry point; current RxInfer exports `infer(...)`. Not rewritten in this pass (code change would need a full Julia execution to verify; heavy toolchain per pass constraints) — tracked as deferred in TO-DO.md.
 
 ### Minor
@@ -47,7 +47,7 @@ Mega-deep documentation review of `ActiveInferenceImplementations` (docs-deep pa
 - chore: removed tracked `.ipynb_checkpoints/` artifact; added `.gitignore`.
 - docs: rewrote `README.md` (about, contents, prerequisites, getting started, license, citation, contributing).
 - docs: added `CONTRIBUTING.md` and `CITATION.cff`.
-- docs: updated dead RxInfer links in both notebooks; added explanatory markdown to `01_message_passing.ipynb`; removed trailing empty cell in `00_intro.ipynb`; minor copy fixes.
+- docs: updated dead RxInfer links in both notebooks; added explanatory markdown to `01_message_passing.ipynb`; removed trailing empty cells in both notebooks; minor copy fixes.
 - Validation: re-checked all URLs touched, re-validated notebook JSON, confirmed `git status` contains only intended changes.
 
 ## Phase 4 — Verification
