@@ -47,9 +47,12 @@ jobs:
         # The kernel keeps the repository project active through `--project=@.`,
         # so the notebooks run against the committed Project.toml. IJulia itself
         # lives in the default environment, which stays on the Julia load path.
+        # The spec name is explicit because IJulia appends the Julia version to
+        # its default name (`julia-1.13-1.13`), while the notebooks ask for the
+        # `julia-1.13` kernel in their metadata.
         run: |
           julia -e 'using Pkg; Pkg.add("IJulia")'
-          julia -e 'using IJulia; IJulia.installkernel("julia-1.13", "--project=@.")'
+          julia -e 'using IJulia; IJulia.installkernel("julia-1.13", "--project=@.", specname="julia-1.13")'
 
       - name: Execute the notebooks
         run: |
