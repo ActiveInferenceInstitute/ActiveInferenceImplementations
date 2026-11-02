@@ -40,6 +40,8 @@ keeps the walkthrough and does not declare a second copy of that model; the
 notebook links to the canonical document, and the file declaring the model is
 validated there.
 
+GNN maintains a [downstream adoption guide](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/blob/main/docs/gnn/integration/downstream_adoption.md) for repositories that consume the notation.
+
 ## Prerequisites
 
 - [Julia](https://julialang.org/downloads/) 1.13 — the notebooks were refreshed
