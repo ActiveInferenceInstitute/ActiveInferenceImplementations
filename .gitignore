@@ -14,3 +14,6 @@ Manifest.toml
 *.jl.cov
 *.jl.*.cov
 *.mem
+
+# GNN validation receipts
+_build/
