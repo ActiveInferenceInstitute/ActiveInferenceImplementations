@@ -1,7 +1,7 @@
 # AII sidecar — InstituteOS metadata. Schema: aii_platform.aii_sidecar
 meta:
   sidecar_version: 1.2.1
-  updated: '2026-11-10'
+  updated: '2026-11-11'
 repo:
   name: ActiveInferenceImplementations
   slug: activeinferenceimplementations
@@ -11,6 +11,8 @@ repo:
     message passing.
 institute:
   category: education
+  status: active
+  maturity: wip
   steward: Active Inference Institute
 ecosystem:
   relations:
@@ -37,6 +39,15 @@ artifacts:
 - path: Project.toml
   kind: code
   description: Julia project configuration.
+- path: RxInfer.jl
+  kind: notebook
+  description: Educational RxInfer.jl notebooks (the repository's primary content).
+- path: specs
+  kind: doc
+  description: GNN model specification and the pinned upstream revision.
+- path: test
+  kind: test
+  description: Julia test suite for the declared model and the recovered posterior.
 - path: src
   kind: code
   description: Source tree.
@@ -64,7 +75,7 @@ tasks:
     cmd: git ls-files
     description: List tracked files.
   test:
-    cmd: julia --project=. -e 'using Pkg; Pkg.test()'
+    cmd: julia --project=. test/runtests.jl
     description: Run the Julia test suite.
 docs:
 - README.md

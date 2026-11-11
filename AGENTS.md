@@ -17,7 +17,7 @@ Educational Jupyter notebooks exploring probabilistic inference and active infer
 | Task | Command | Working directory |
 | --- | --- | --- |
 | `inventory` | `git ls-files` | `.` |
-| `test` | `julia --project=. -e 'using Pkg; Pkg.test()'` | `.` |
+| `test` | `julia --project=. test/runtests.jl` | `.` |
 
 ## InstituteOS sidecar
 

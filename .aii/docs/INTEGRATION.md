@@ -42,6 +42,9 @@
 | `LICENSE` | `doc` | License. |
 | `CITATION.cff` | `citation` | Machine-readable citation metadata. |
 | `Project.toml` | `code` | Julia project configuration. |
+| `RxInfer.jl` | `notebook` | Educational RxInfer.jl notebooks (the repository's primary content). |
+| `specs` | `doc` | GNN model specification and the pinned upstream revision. |
+| `test` | `test` | Julia test suite for the declared model and the recovered posterior. |
 | `src` | `code` | Source tree. |
 | `AGENTS.md` | `doc` | Agent guidance. |
 
@@ -50,7 +53,7 @@
 | Task | Command | Working directory | Description |
 | --- | --- | --- | --- |
 | `inventory` | `git ls-files` | `.` | List tracked files. |
-| `test` | `julia --project=. -e 'using Pkg; Pkg.test()'` | `.` | Run the Julia test suite. |
+| `test` | `julia --project=. test/runtests.jl` | `.` | Run the Julia test suite. |
 
 ## Validation
 

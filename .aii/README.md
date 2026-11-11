@@ -42,7 +42,7 @@ Institute repositories without touching this project's own content. The schema i
 | Task | Command | Working directory | Description |
 | --- | --- | --- | --- |
 | `inventory` | `git ls-files` | `.` | List tracked files. |
-| `test` | `julia --project=. -e 'using Pkg; Pkg.test()'` | `.` | Run the Julia test suite. |
+| `test` | `julia --project=. test/runtests.jl` | `.` | Run the Julia test suite. |
 
 ## Links
 

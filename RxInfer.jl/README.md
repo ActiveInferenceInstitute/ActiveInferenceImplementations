@@ -28,7 +28,7 @@ Install the IJulia kernel the notebooks declare (once per machine):
 using Pkg
 Pkg.add("IJulia")
 using IJulia
-IJulia.installkernel("julia-1.13", "--project=@.")
+IJulia.installkernel("julia-1.13", "--project=@.", specname="julia-1.13")
 ```
 
 Then launch Jupyter from the repository root and open the notebooks. No

@@ -68,11 +68,14 @@ Register the kernel the notebooks declare, once per machine:
 using Pkg
 Pkg.add("IJulia")
 using IJulia
-IJulia.installkernel("julia-1.13", "--project=@.")
+IJulia.installkernel("julia-1.13", "--project=@.", specname="julia-1.13")
 ```
 
-The `--project=@.` option keeps the repository's `Project.toml` active inside
-the kernel, so the notebooks run against the committed environment. Then launch
+The `specname` argument keeps the installed kernelspec named exactly
+`julia-1.13`, which is what the notebooks request; without it IJulia appends the
+Julia version to the kernel name (`julia-1.13-1.13`). The `--project=@.` option
+keeps the repository's `Project.toml` active inside the kernel, so the
+notebooks run against the committed environment. Then launch
 Jupyter from the repository root and open the notebooks under `RxInfer.jl/`:
 
 ```sh
