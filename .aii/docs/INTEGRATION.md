@@ -47,6 +47,10 @@
 | `test` | `test` | Julia test suite for the declared model and the recovered posterior. |
 | `src` | `code` | Source tree. |
 | `AGENTS.md` | `doc` | Agent guidance. |
+| `docs/README.md` | `doc` | Documentation index for the repository. |
+| `docs/repository-layout.md` | `doc` | Map of the tracked tree and how the pieces fit together. |
+| `docs/notebooks.md` | `doc` | Notebook teaching order, run instructions, and output behaviour. |
+| `docs/gnn-conformance.md` | `doc` | The GNN pin, the three readers, digest checks, and the conformance gate. |
 
 ## Portable tasks
 

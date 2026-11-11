@@ -54,6 +54,18 @@ artifacts:
 - path: AGENTS.md
   kind: doc
   description: Agent guidance.
+- path: docs/README.md
+  kind: doc
+  description: Documentation index for the repository.
+- path: docs/repository-layout.md
+  kind: doc
+  description: Map of the tracked tree and how the pieces fit together.
+- path: docs/notebooks.md
+  kind: doc
+  description: Notebook teaching order, run instructions, and output behaviour.
+- path: docs/gnn-conformance.md
+  kind: doc
+  description: The GNN pin, the three readers, digest checks, and the conformance gate.
 provenance:
   license: CC-BY-4.0
   citation:

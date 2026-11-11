@@ -12,6 +12,19 @@ Bayesian inference on factor graphs by message passing. The notebooks are
 intended as hands-on learning material: each one is self-contained, seeded for
 reproducibility, and builds on the previous one.
 
+## Contents
+
+- [Repository contents](#repository-contents)
+- [Canonical models elsewhere in the fleet](#canonical-models-elsewhere-in-the-fleet)
+- [Prerequisites](#prerequisites)
+- [Getting started](#getting-started)
+- [Verification](#verification)
+- [Documentation](docs/README.md)
+- [Contributing](#contributing)
+- [Citation](#citation)
+- [License](#license)
+- [InstituteOS sidecar](#instituteos-sidecar)
+
 ## Repository contents
 
 | Notebook | Topic |
@@ -28,6 +41,7 @@ reproducibility, and builds on the previous one.
 | [scripts/gnn_parser_probe.py](scripts/gnn_parser_probe.py) | The pinned-parser probe run in a subprocess by the validation gate |
 | [test/runtests.jl](test/runtests.jl) | Test suite: declared scalars, data reproducibility, and the recovered posterior statistics |
 | [Project.toml](Project.toml) | The notebook environment |
+| [docs/README.md](docs/README.md) | Documentation index: repository layout, notebook guide, and the GNN conformance gate |
 
 ## Canonical models elsewhere in the fleet
 
@@ -112,6 +126,22 @@ Two environment notes from running the gates on macOS:
   starting Jupyter.
 - The notebooks keep their rendered outputs in git, so executing them rewrites
   the committed outputs.
+
+## Documentation
+
+[docs/README.md](docs/README.md) is the documentation index. It links:
+
+- [docs/repository-layout.md](docs/repository-layout.md) — what every tracked
+  file and folder is for, and how the pieces fit together.
+- [docs/notebooks.md](docs/notebooks.md) — teaching order, how to run the
+  notebooks, and why executing them rewrites committed outputs.
+- [docs/gnn-conformance.md](docs/gnn-conformance.md) — the GNN pin, the three
+  readers, the digest checks, and the gate's exit codes.
+
+Folder-level guides live next to the material they describe:
+[RxInfer.jl/README.md](RxInfer.jl/README.md),
+[specs/README.md](specs/README.md), [src/README.md](src/README.md),
+[scripts/README.md](scripts/README.md), and [test/README.md](test/README.md).
 
 ## Contributing
 

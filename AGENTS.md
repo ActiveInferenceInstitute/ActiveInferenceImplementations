@@ -10,6 +10,9 @@ Educational Jupyter notebooks exploring probabilistic inference and active infer
 - Keep private content in private repositories; never commit credentials,
   personal data, or unverified claims.
 - Read [`README.md`](README.md) first, then the nearest nested `AGENTS.md`.
+- Documentation lives in [`docs/`](docs/README.md) (index, repository layout,
+  notebook guide, GNN conformance) with folder guides next to each material
+  folder: `RxInfer.jl/`, `specs/`, `src/`, `scripts/`, and `test/`.
 - Prefer small, verified changes; run the declared tasks before handing work back.
 
 ## Tasks
