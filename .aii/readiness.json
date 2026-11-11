@@ -1,0 +1,11 @@
+{
+  "schema": "aii-readiness/v1",
+  "repo": "ActiveInferenceInstitute/ActiveInferenceImplementations",
+  "tier": "julia",
+  "standard_version": "1.0.0",
+  "baseline": {
+    "commit": "e09a013de0c24709d7af727c1e599548c85d14af",
+    "measured_at": "2026-11-10"
+  },
+  "waivers": []
+}

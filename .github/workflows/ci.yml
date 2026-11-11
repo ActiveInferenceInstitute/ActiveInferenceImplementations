@@ -11,6 +11,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   notebooks:
     # Runs the documented gates of this repository: the declared model is read
@@ -61,6 +64,7 @@ jobs:
             RxInfer.jl/00_intro.ipynb RxInfer.jl/01_message_passing.ipynb
 
   gnn-conformance:
+    timeout-minutes: 120
     # Validates specs/normal_vmp.gnn.md with the GNN revision pinned in
     # specs/gnn-pin.json and checks that the dependency-free Julia reader in
     # src/spec_reader.jl reads the same declarations. The pinned revision is

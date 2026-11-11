@@ -126,3 +126,11 @@ This repository is licensed under the
 [Creative Commons Attribution 4.0 International License (CC BY 4.0)](LICENSE).
 See the [human-readable summary](https://creativecommons.org/licenses/by/4.0/)
 and the [full legal code](https://creativecommons.org/licenses/by/4.0/legalcode).
+
+## InstituteOS sidecar
+
+This repository carries a committed [`.aii/`](.aii/README.md) sidecar with curated
+InstituteOS metadata (`aii-sidecar/v1`): category, maturity, ecosystem relations,
+key artifacts, provenance, and portable tasks. It is read by
+[InstituteOS](https://github.com/ActiveInferenceInstitute/InstituteOS) tooling and
+does not affect the project's build or runtime.
