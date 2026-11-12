@@ -82,7 +82,11 @@ GNN_PYTHON=/path/to/parser-runtime/bin/python \
   ./run.sh gnn
 ```
 
-The underlying validator invocation is
+The validator also requires the pin's `language_version` to equal the language
+version the pinned parser reports for the document (`language-version-mismatch`),
+and the arm finishes with the validator's offline unit tests
+(`test/test_validate_gnn_spec.py`, standard library, no network). The underlying
+validator invocation is
 `python3 scripts/validate_gnn_spec.py --gnn-runtime <python> --julia julia --json`
 (or `--gnn-root <dir> --python <python>`).
 

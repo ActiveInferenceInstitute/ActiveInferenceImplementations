@@ -139,6 +139,9 @@ arm_gnn() {
         "$PYTHON_BIN" scripts/validate_gnn_spec.py \
             --gnn-runtime "$runtime" --julia "$JULIA_BIN" --json
     fi
+    # Offline unit tests of the validator's own failure modes (standard library,
+    # no network).
+    "$PYTHON_BIN" -m unittest discover -s test -p 'test_*.py'
 }
 
 arm_contract() {
