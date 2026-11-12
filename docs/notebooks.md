@@ -63,6 +63,7 @@ These were observed running the gates on macOS and are recorded in the
 
 - If GR (the default `Plots.jl` backend) cannot load `libssl.3.dylib`, export
   `DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib:/usr/lib` before
-  starting Jupyter.
+  starting Jupyter. `./run.sh notebooks` exports it automatically when
+  `/opt/homebrew/opt/openssl@3/lib` exists.
 - The `[compat]` bounds allow Julia 1.10+, but the configuration exercised by CI
   and the notebook refresh is Julia 1.13 with RxInfer 6.

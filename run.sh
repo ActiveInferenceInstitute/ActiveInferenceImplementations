@@ -141,6 +141,12 @@ arm_gnn() {
 }
 
 arm_notebooks() {
+    # macOS: FFMPEG_jll (loaded by Plots) needs libssl.3 through
+    # DYLD_FALLBACK_LIBRARY_PATH; see the environment note in README.md. The
+    # directory is absent on Linux, so CI is unaffected.
+    if [ -d /opt/homebrew/opt/openssl@3/lib ]; then
+        export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/openssl@3/lib:/usr/lib${DYLD_FALLBACK_LIBRARY_PATH:+:$DYLD_FALLBACK_LIBRARY_PATH}"
+    fi
     mkdir -p "$BUILD/executed"
     "$(notebook_python)" -m nbconvert --to notebook --execute \
         --ExecutePreprocessor.timeout=1800 \
@@ -177,7 +183,10 @@ case "$1" in
         failed=""
         for arm in "${MEASURED_ARMS[@]}"; do
             printf '\n=== %s ===\n' "$arm"
-            if ! run_arm "$arm"; then
+            # A fresh process, not run_arm: calling the function under `if !`
+            # disables errexit inside it, so an early failing command (for
+            # example the link checker) would be masked by a later passing one.
+            if ! bash "$ROOT/run.sh" "$arm"; then
                 failed="${failed}${failed:+ }${arm}"
             fi
         done

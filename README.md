@@ -132,7 +132,8 @@ Two environment notes from running the gates on macOS:
 
 - If GR (the default `Plots.jl` backend) cannot load `libssl.3.dylib`, export
   `DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib:/usr/lib` before
-  starting Jupyter.
+  starting Jupyter. `./run.sh notebooks` does this itself when the Homebrew
+  OpenSSL directory exists, which is what makes the arm reproducible on macOS.
 - The notebooks keep their rendered outputs in git, so executing them rewrites
   the committed outputs.
 
