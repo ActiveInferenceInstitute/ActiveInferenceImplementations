@@ -302,6 +302,15 @@ def _notebook_failures() -> list[str]:
     return failures
 
 
+def _normalize_language_version(value: Any) -> str:
+    """Normalize ``GNN v1.1`` / ``v1.1`` / ``1.1`` to the same comparison form."""
+
+    text = str(value or "").strip()
+    if text.startswith("GNN "):
+        text = text[4:]
+    return text.removeprefix("v")
+
+
 def conformance_failures(
     payload: dict[str, Any],
     *,
@@ -319,6 +328,17 @@ def conformance_failures(
     if payload["gnn_version"] != expected_version:
         failures.append(
             f"parser version {payload['gnn_version']} differs from the pinned {expected_version}"
+        )
+    # The pin's language_version is the syntax generation the document declares
+    # (``GNN v1.1``); the parser reports the same value without the ``GNN v``
+    # prefix. Compare the normalized forms so a document edited to declare a
+    # different generation fails the gate instead of silently passing.
+    declared_version = _normalize_language_version(parser.get("version"))
+    expected_language = _normalize_language_version(pin["language_version"])
+    if declared_version != expected_language:
+        failures.append(
+            f"declared GNN version {declared_version!r} differs from the pin's "
+            f"language_version {pin['language_version']!r}"
         )
     if source is not None:
         module = Path(str(payload["gnn_module"])).resolve()
