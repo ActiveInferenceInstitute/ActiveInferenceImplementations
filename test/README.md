@@ -1,6 +1,9 @@
 # Test suite
 
-Two files, two arms of [`../run.sh`](../run.sh):
+Julia files, two arms of [`../run.sh`](../run.sh); a third file,
+`test_validate_gnn_spec.py`, is the offline unit test of
+`scripts/validate_gnn_spec.py` (standard library, no network) and runs at the end
+of `./run.sh gnn`:
 
 | File | Arm | Needs RxInfer | Checks |
 | --- | --- | --- | --- |

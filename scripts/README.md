@@ -9,7 +9,10 @@ The documented conformance gate for `specs/normal_vmp.gnn.md`; the `gnn` arm.
 It verifies the pinned GNN parser and its recorded digests, parses the document
 in a subprocess, and compares three independent readers of the declarations: the
 pinned parser, the regular-expression reader in this script, and the
-dependency-free Julia reader in `src/spec_reader.jl`.
+dependency-free Julia reader in `src/spec_reader.jl`. The pin's
+`language_version` must equal the version the pinned parser reports for the
+document (`language-version-mismatch`); `./run.sh gnn` then runs the validator's
+offline unit tests (`test/test_validate_gnn_spec.py`).
 
 Exit codes: `0` pass, `1` conformance failure, `2` pinned runtime, pinned
 checkout, or requested Julia reader unavailable. Exit `2` means the check was

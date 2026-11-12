@@ -54,7 +54,7 @@ keeps the walkthrough and does not declare a second copy of that model; the
 notebook links to the canonical document, and the file declaring the model is
 validated there.
 
-GNN maintains a [downstream adoption guide](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/blob/main/docs/gnn/integration/downstream_adoption.md) for repositories that consume the notation.
+GNN maintains a [downstream adoption guide](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/blob/main/docs/gnn/integration/downstream_adoption.md) for repositories that consume the notation. The guide is on GNN `main`; it is not present at the revision pinned in [`specs/gnn-pin.json`](specs/gnn-pin.json) (v5.0.3), so read it as current upstream guidance rather than as part of the pinned parser.
 
 ## Prerequisites
 

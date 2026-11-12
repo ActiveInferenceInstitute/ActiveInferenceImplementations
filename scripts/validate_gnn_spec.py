@@ -27,6 +27,9 @@ document: the pinned parser, the regular-expression reader in this script, and
 the dependency-free Julia reader in ``src/spec_reader.jl``
 (``--julia`` or ``JULIA_BIN``, used by the Julia test suite as well).
 
+The pin's ``language_version`` (for example ``GNN v1.1``) must equal the version
+the pinned parser reports for the document (``language-version-mismatch``).
+
 Exit codes: ``0`` pass, ``1`` conformance failure, ``2`` pinned runtime, pinned
 checkout, or requested Julia reader unavailable (the run is then explicitly
 *not run*, never a pass).
@@ -302,6 +305,30 @@ def _notebook_failures() -> list[str]:
     return failures
 
 
+_LANGUAGE_VERSION = re.compile(r"(?i)^\s*(?:GNN\s*)?v?(\d+(?:\.\d+)*)")
+
+
+def _normalize_language_version(text: object) -> str | None:
+    """Return ``1.1`` for ``GNN v1.1``, ``v1.1`` or ``1.1``; ``None`` when unparseable."""
+
+    match = _LANGUAGE_VERSION.match(str(text))
+    return match.group(1) if match else None
+
+
+def language_version_failures(pin: dict[str, Any], declared: object) -> list[str]:
+    """Return failures when the parser's declared language version is not the pin's."""
+
+    expected = _normalize_language_version(pin["language_version"])
+    if expected is None:
+        return [f"the pin's language_version {pin['language_version']!r} is not parseable"]
+    if _normalize_language_version(declared) != expected:
+        return [
+            f"language-version-mismatch: the pinned parser reports {declared!r}, "
+            f"the pin records {pin['language_version']!r}"
+        ]
+    return []
+
+
 def conformance_failures(
     payload: dict[str, Any],
     *,
@@ -320,6 +347,7 @@ def conformance_failures(
         failures.append(
             f"parser version {payload['gnn_version']} differs from the pinned {expected_version}"
         )
+    failures.extend(language_version_failures(pin, parser["version"]))
     if source is not None:
         module = Path(str(payload["gnn_module"])).resolve()
         if not module.is_relative_to((source / "src").resolve()):
@@ -488,6 +516,8 @@ def main(argv: list[str] | None = None) -> int:
         "pin_source": origin,
         "gnn_version": payload["gnn_version"],
         "gnn_module": payload["gnn_module"],
+        "language_version": pin["language_version"],
+        "parser_language_version": payload["parser"].get("version"),
         "parser_success": payload["parser"]["success"],
         "semantic_valid": payload["semantic"].get("is_valid"),
         "consistency_score": payload["consistency"].get("consistency_score"),
