@@ -14,15 +14,17 @@ concurrency:
 permissions:
   contents: read
 
+# Every gate step calls an arm of ./run.sh, the same entry point a local run
+# uses, so the commands cannot drift. One job provisions the Julia, uv, GNN, and
+# notebook environments once; the arms then share them.
+#
+# `./run.sh test` is the full suite and includes the `test-fast` static gates,
+# so the fast arm is not repeated here.
 jobs:
-  notebooks:
-    # Runs the documented gates of this repository: the declared model is read
-    # from specs/normal_vmp.gnn.md, the test suite checks the declarations and
-    # the message passing result against RxInfer, and both notebooks are
-    # executed end to end with the committed environment.
-    name: tests and notebooks (julia 1.13)
+  gate:
+    name: gates (julia 1.13, python 3.12)
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -35,85 +37,27 @@ jobs:
       - name: Cache Julia artifacts and packages
         uses: julia-actions/cache@9353db09a0f2bbbdec6f41791918c75d37391b36 # v3.5.0
 
-      - name: Instantiate the notebook environment
-        run: julia --project=. -e 'using Pkg; Pkg.instantiate()'
-
-      - name: Run the test suite
-        run: julia --project=. test/runtests.jl
-
-      - name: Install nbconvert
-        run: |
-          python3 -m pip install --quiet --upgrade pip
-          python3 -m pip install --quiet nbconvert
-
-      - name: Install the IJulia kernel for the notebook environment
-        # The kernel keeps the repository project active through `--project=@.`,
-        # so the notebooks run against the committed Project.toml. IJulia itself
-        # lives in the default environment, which stays on the Julia load path.
-        # The spec name is explicit because IJulia appends the Julia version to
-        # its default name (`julia-1.13-1.13`), while the notebooks ask for the
-        # `julia-1.13` kernel in their metadata.
-        run: |
-          julia -e 'using Pkg; Pkg.add("IJulia")'
-          julia -e 'using IJulia; IJulia.installkernel("julia-1.13", "--project=@.", specname="julia-1.13")'
-
-      - name: Execute the notebooks
-        run: |
-          python3 -m nbconvert --to notebook --execute \
-            --output-dir="$RUNNER_TEMP/executed" \
-            RxInfer.jl/00_intro.ipynb RxInfer.jl/01_message_passing.ipynb
-
-  gnn-conformance:
-    timeout-minutes: 120
-    # Validates specs/normal_vmp.gnn.md with the GNN revision pinned in
-    # specs/gnn-pin.json and checks that the dependency-free Julia reader in
-    # src/spec_reader.jl reads the same declarations. The pinned revision is
-    # installed into its own runtime, and the parser files are digest-verified
-    # against the pin record before the document is parsed.
-    name: gnn conformance (pinned)
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Install uv
+      - name: Set up uv
         # v10.3.3; setup-uv publishes no floating v10 major tag, so @v10 is unresolvable
         uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2
         with:
           version: "0.13.7"
           enable-cache: true
 
-      - name: Set up Python 3.12
-        run: uv python install 3.12
+      - name: Provision the Julia, notebook, and IJulia environments
+        run: ./run.sh setup
 
-      - name: Set up Julia
-        uses: julia-actions/setup-julia@da908477b5db94c10ffce8cfea9f2b3b9d5db687 # v3.0.3
-        with:
-          version: "1.13"
+      - name: Lint
+        run: ./run.sh lint
 
-      - name: Provision the pinned GNN parser runtime
-        run: |
-          set -euo pipefail
-          PIN=specs/gnn-pin.json
-          PY=$(uv python find --no-project 3.12)
-          REPO=$("$PY" -c "import json;print(json.load(open('$PIN'))['repository'])")
-          COMMIT=$("$PY" -c "import json;print(json.load(open('$PIN'))['commit'])")
-          uv venv --python 3.12 "$RUNNER_TEMP/gnn-runtime"
-          # The install follows specs/gnn-pin.json; a pin bump re-points it.
-          uv pip install --python "$RUNNER_TEMP/gnn-runtime/bin/python" \
-            "generalized-notation-notation @ git+${REPO}@${COMMIT}"
+      - name: Test suite
+        run: ./run.sh test
 
-      - name: Validate the GNN specification against the pinned parser
-        run: >-
-          "$RUNNER_TEMP/gnn-runtime/bin/python" scripts/validate_gnn_spec.py
-          --gnn-runtime "$RUNNER_TEMP/gnn-runtime/bin/python"
-          --julia julia --json
+      - name: Documentation links and generated gate table
+        run: ./run.sh docs
 
-      - name: Report the resolved GNN version
-        run: |
-          PIN=specs/gnn-pin.json
-          VERSION=$("$RUNNER_TEMP/gnn-runtime/bin/python" -c 'import gnn; print(gnn.__version__)')
-          TAG=$(python3 -c "import json;print(json.load(open('$PIN'))['tag'])")
-          test -n "$VERSION"
-          test "$VERSION" = "${TAG#v}"
-          echo "gnn-version=${VERSION}" >> "$GITHUB_STEP_SUMMARY"
+      - name: GNN conformance
+        run: ./run.sh gnn
+
+      - name: Execute the notebooks
+        run: ./run.sh notebooks

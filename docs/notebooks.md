@@ -24,7 +24,8 @@ From the repository root:
 julia --project=. -e 'using Pkg; Pkg.instantiate()'
 ```
 
-Register the IJulia kernel the notebooks declare, once per machine:
+Register the IJulia kernel the notebooks declare, once per machine (`./run.sh
+setup` does this and instantiates the environment):
 
 ```julia
 using Pkg
@@ -40,8 +41,13 @@ inside the kernel. Then launch Jupyter from the repository root and open the
 notebooks under `RxInfer.jl/`. No environment variables or configuration are
 required for the notebooks themselves.
 
-CI executes both notebooks headlessly with `nbconvert --execute` on Julia 1.13;
-see [`../.github/workflows/ci.yml`](../.github/workflows/ci.yml).
+CI executes both notebooks headlessly with `nbconvert --execute` on Julia 1.13
+through `./run.sh notebooks`; see
+[`../.github/workflows/ci.yml`](../.github/workflows/ci.yml). That arm writes
+into `_build/executed` and never overwrites the committed outputs. Notebook
+execution is deliberately not part of the fast arm: `./run.sh test-fast` reads
+the notebooks as text and never runs a kernel, so the default local gate stays
+in seconds.
 
 ## Outputs and git
 

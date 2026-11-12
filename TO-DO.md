@@ -37,6 +37,23 @@ Sections:
 - [ ] Keep `docs/repository-layout.md` and `docs/gnn-conformance.md` in step when the
       notebook set, the GNN document, or the pin changes.
 
+### 2026-11-12 — one gate entry point, measured arms
+
+- [x] ✓ Added `run.sh` as the single gate entry point with separately runnable
+      arms (`setup`, `lint`, `test-fast`, `test`, `docs`, `gnn`, `notebooks`,
+      `gate`) and rewrote `.github/workflows/ci.yml` to call those arms instead
+      of inlining commands. The two CI jobs became one, sharing one Julia/uv/
+      GNN/notebook environment.
+- [x] ✓ Split `test/runtests.jl` into `test/static_tests.jl` (no RxInfer, the
+      default arm) and the full suite, which includes it, so no test runs twice.
+- [x] ✓ Added `scripts/check_docs_links.py` (relative links, heading anchors,
+      documentation-index completeness) and `scripts/measure_gates.py`, which
+      generates `docs/gate-timings.md`; `./run.sh docs` fails when an arm is
+      missing from that page.
+- [x] ✓ Added `docs/documentation-index.md` and linked it from the hub.
+- [ ] Keep `docs/gate-timings.md` refreshed with `python3 scripts/measure_gates.py`
+      when an arm's command or dependency set changes.
+
 ---
 
 ## Open / deferred

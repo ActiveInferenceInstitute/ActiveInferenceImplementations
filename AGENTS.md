@@ -17,10 +17,20 @@ Educational Jupyter notebooks exploring probabilistic inference and active infer
 
 ## Tasks
 
+`./run.sh` is the single gate entry point; `./run.sh --list` prints the arms.
+CI calls the same arms.
+
 | Task | Command | Working directory |
 | --- | --- | --- |
 | `inventory` | `git ls-files` | `.` |
-| `test` | `julia --project=. test/runtests.jl` | `.` |
+| `setup` | `./run.sh setup` | `.` |
+| `lint` | `./run.sh lint` | `.` |
+| `test-fast` | `./run.sh test-fast` | `.` |
+| `test` | `./run.sh test` (full suite; includes `test-fast`) | `.` |
+| `docs` | `./run.sh docs` | `.` |
+| `gnn` | `./run.sh gnn` | `.` |
+| `notebooks` | `./run.sh notebooks` | `.` |
+| `gate` | `./run.sh gate` | `.` |
 
 ## InstituteOS sidecar
 

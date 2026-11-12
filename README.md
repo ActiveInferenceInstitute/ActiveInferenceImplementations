@@ -101,23 +101,32 @@ environment variables or configuration are required.
 
 ## Verification
 
-These are the documented gates of the repository; `.github/workflows/ci.yml`
-runs all of them on every push and pull request.
+[`run.sh`](run.sh) is the single gate entry point. Every arm is separately
+runnable, and `.github/workflows/ci.yml` calls the same arms, so a local run and
+CI cannot diverge:
 
 ```sh
-julia --project=. -e 'using Pkg; Pkg.instantiate()'   # notebook environment
-julia --project=. test/runtests.jl                    # test suite
-python3 scripts/validate_gnn_spec.py --gnn-runtime <python> --julia julia --json
-python3 -m nbconvert --to notebook --execute RxInfer.jl/00_intro.ipynb \
-    RxInfer.jl/01_message_passing.ipynb --output-dir=/tmp/executed
+./run.sh setup        # Julia environment, notebook runtime, IJulia kernel
+./run.sh lint         # Julia parse, Python compile, JSON validity, shell syntax
+./run.sh test-fast    # static gates only; no RxInfer, no inference (default arm)
+./run.sh test         # full suite, includes the static gates
+./run.sh docs         # relative links + the generated gate table
+./run.sh gnn          # GNN conformance against specs/gnn-pin.json
+./run.sh notebooks    # execute both notebooks into _build/executed
+./run.sh gate         # every gate arm, failures aggregated
 ```
 
+`./run.sh` with no argument runs `test-fast`. The measured wall time and test
+count of each arm live in [`docs/gate-timings.md`](docs/gate-timings.md), which
+`python3 scripts/measure_gates.py` generates and `./run.sh docs` checks.
+
 The GNN validation needs a runtime with the pinned GNN distribution
-(`--gnn-runtime` or `GNN_RUNTIME_PYTHON`) or a GNN git checkout
-(`--gnn-root` or `GNN_ROOT`). Without one it exits `2` and prints that the check
-was not run; that is not a pass. The pin is recorded in
-[`specs/gnn-pin.json`](specs/gnn-pin.json) and bumping it is a deliberate change
-followed by a fresh validation run.
+(`GNN_RUNTIME_PYTHON`), a GNN git checkout (`GNN_ROOT` with `GNN_PYTHON`), or
+network access so `./run.sh gnn` can provision one from the pin into
+`_build/gnn-runtime`. Without a source it exits `2` and prints that the check was
+not run; that is not a pass. The pin is recorded in
+[`specs/gnn-pin.json`](specs/gnn-pin.json) (schema `gnn-importer-pin/v1`), and
+bumping it is a deliberate change followed by a fresh validation run.
 
 Two environment notes from running the gates on macOS:
 
@@ -129,7 +138,9 @@ Two environment notes from running the gates on macOS:
 
 ## Documentation
 
-[docs/README.md](docs/README.md) is the documentation index. It links:
+[docs/README.md](docs/README.md) is the documentation hub, and
+[docs/documentation-index.md](docs/documentation-index.md) is the flat index of
+every long-lived page. The hub links:
 
 - [docs/repository-layout.md](docs/repository-layout.md) — what every tracked
   file and folder is for, and how the pieces fit together.
@@ -137,6 +148,8 @@ Two environment notes from running the gates on macOS:
   notebooks, and why executing them rewrites committed outputs.
 - [docs/gnn-conformance.md](docs/gnn-conformance.md) — the GNN pin, the three
   readers, the digest checks, and the gate's exit codes.
+- [docs/gate-timings.md](docs/gate-timings.md) — generated per-arm wall times and
+  test counts.
 
 Folder-level guides live next to the material they describe:
 [RxInfer.jl/README.md](RxInfer.jl/README.md),
