@@ -1,0 +1,51 @@
+{
+  "schema": "education-contract/v1",
+  "provenance": {
+    "repository": "ActiveInferenceInstitute/ActiveInferenceImplementations",
+    "revision": "d2497d494403f92908455958daf0dad5ec975fab"
+  },
+  "units": [
+    {
+      "unit_id": "implementations-00-intro",
+      "title": "RxInfer.jl",
+      "objectives": [
+        {
+          "objective_id": "implementations-00-model",
+          "statement": "Specify a Beta-Bernoulli coin model and infer its bias with RxInfer."
+        },
+        {
+          "objective_id": "implementations-00-messages",
+          "statement": "Construct the coin-bias posterior from individual prior and likelihood messages."
+        },
+        {
+          "objective_id": "implementations-00-observations",
+          "statement": "Compare posterior distributions as the number of coin observations increases."
+        }
+      ],
+      "prerequisites": [],
+      "source_path": "RxInfer.jl/00_intro.ipynb"
+    },
+    {
+      "unit_id": "implementations-01-message-passing",
+      "title": "Exploring Message Passing Schemes",
+      "objectives": [
+        {
+          "objective_id": "implementations-01-specification",
+          "statement": "Read the Normal model's priors and inference settings from its GNN specification."
+        },
+        {
+          "objective_id": "implementations-01-factorization",
+          "statement": "Explain how the mean-field constraint factorizes the mean and precision posterior."
+        },
+        {
+          "objective_id": "implementations-01-convergence",
+          "statement": "Interpret posterior marginal plots and free energy across VMP iterations."
+        }
+      ],
+      "prerequisites": [],
+      "source_path": "RxInfer.jl/01_message_passing.ipynb"
+    }
+  ],
+  "prerequisite_edges": [],
+  "glossary": []
+}

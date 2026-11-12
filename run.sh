@@ -11,6 +11,7 @@
 #   ./run.sh test           # full suite (includes the static gates)
 #   ./run.sh docs           # relative links + generated gate table freshness
 #   ./run.sh gnn            # GNN conformance against specs/gnn-pin.json
+#   ./run.sh contract       # canonical Education checker (requires courses checkout)
 #   ./run.sh notebooks      # execute both notebooks into _build/executed
 #   ./run.sh gate           # every gate arm above, failures aggregated
 #   ./run.sh --list         # print the arm names, one per line
@@ -32,8 +33,8 @@ GNN_PIN="specs/gnn-pin.json"
 JULIA_BIN=${JULIA_BIN:-julia}
 PYTHON_BIN=${PYTHON_BIN:-python3}
 
-ARMS=(setup lint test-fast test docs gnn notebooks gate)
-MEASURED_ARMS=(lint test-fast test docs gnn notebooks)
+ARMS=(setup lint test-fast test docs gnn contract notebooks gate)
+MEASURED_ARMS=(lint test-fast test docs gnn contract notebooks)
 NOTEBOOKS=(RxInfer.jl/00_intro.ipynb RxInfer.jl/01_message_passing.ipynb)
 
 usage() {
@@ -140,6 +141,15 @@ arm_gnn() {
     fi
 }
 
+arm_contract() {
+    local checker="${EDUCATION_ROOT:-$ROOT/../courses}/software/scripts/check_education_contract.py"
+    if [ ! -f "$checker" ]; then
+        echo "contract arm: canonical checker not found at $checker; set EDUCATION_ROOT to a courses checkout" >&2
+        return 2
+    fi
+    "$PYTHON_BIN" -B "$checker" specs/education/implementations.json
+}
+
 arm_notebooks() {
     # macOS: FFMPEG_jll (loaded by Plots) needs libssl.3 through
     # DYLD_FALLBACK_LIBRARY_PATH; see the environment note in README.md. The
@@ -161,6 +171,7 @@ run_arm() {
         test) arm_test ;;
         docs) arm_docs ;;
         gnn) arm_gnn ;;
+        contract) arm_contract ;;
         notebooks) arm_notebooks ;;
         *) echo "unknown arm: $1" >&2; usage >&2; return 64 ;;
     esac

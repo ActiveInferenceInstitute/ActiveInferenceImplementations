@@ -22,8 +22,8 @@ The pre-change baseline those arms replaced is recorded in
 
 | Item | Value |
 | --- | --- |
-| Commit | 38c1fa1 |
-| Measured | 2026-11-12 13:18 UTC |
+| Commit | 4c7c708 |
+| Measured | 2026-11-12 14:41 UTC |
 | Host | macOS-27.0.1-arm64-arm-64bit-Mach-O |
 | Julia | julia version 1.13.3 |
 | Python | Python 3.15.2 |
@@ -33,12 +33,13 @@ The pre-change baseline those arms replaced is recorded in
 
 | Arm | Command | Status | Wall time (s) | Result |
 | --- | --- | --- | --- | --- |
-| `lint` | `./run.sh lint` | pass | 0.3 | ok |
-| `test-fast` | `./run.sh test-fast` | pass | 4.6 | 39 pass |
-| `test` | `./run.sh test` | pass | 23.7 | 47 pass |
+| `lint` | `./run.sh lint` | pass | 0.2 | ok |
+| `test-fast` | `./run.sh test-fast` | pass | 1.9 | 39 pass |
+| `test` | `./run.sh test` | pass | 8.7 | 47 pass |
 | `docs` | `./run.sh docs` | pass | 0.2 | ok |
-| `gnn` | `./run.sh gnn` | pass | 2.0 | gnn 5.0.3 (pin 8f293d9ba810) |
-| `notebooks` | `./run.sh notebooks` | pass | 77.4 | 2 notebooks executed |
+| `gnn` | `./run.sh gnn` | pass | 0.8 | gnn 5.0.3 (pin 8f293d9ba810) |
+| `contract` | `./run.sh contract` | pass | 0.1 | ok |
+| `notebooks` | `./run.sh notebooks` | pass | 30.2 | 2 notebooks executed |
 
 ## Not measured
 

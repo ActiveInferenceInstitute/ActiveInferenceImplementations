@@ -29,6 +29,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Check out the canonical Education checker
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ActiveInferenceInstitute/courses
+          ref: f1e5af62dc2581b9d4c09746c8b7c4fa09dc5e1b
+          path: _build/courses
+          persist-credentials: false
+
       - name: Set up Julia 1.13
         uses: julia-actions/setup-julia@da908477b5db94c10ffce8cfea9f2b3b9d5db687 # v3.0.3
         with:
@@ -58,6 +66,11 @@ jobs:
 
       - name: GNN conformance
         run: ./run.sh gnn
+
+      - name: Education contract
+        env:
+          EDUCATION_ROOT: ${{ github.workspace }}/_build/courses
+        run: ./run.sh contract
 
       - name: Execute the notebooks
         run: ./run.sh notebooks
