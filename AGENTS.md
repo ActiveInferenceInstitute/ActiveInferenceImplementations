@@ -29,6 +29,7 @@ CI calls the same arms.
 | `test` | `./run.sh test` (full suite; includes `test-fast`) | `.` |
 | `docs` | `./run.sh docs` | `.` |
 | `gnn` | `./run.sh gnn` | `.` |
+| `contract` | `./run.sh contract` (sibling `courses`, or `EDUCATION_ROOT`) | `.` |
 | `notebooks` | `./run.sh notebooks` | `.` |
 | `gate` | `./run.sh gate` | `.` |
 

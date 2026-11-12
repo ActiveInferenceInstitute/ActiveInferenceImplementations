@@ -28,7 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DOC = ROOT / "docs" / "gate-timings.md"
 RECEIPT = ROOT / "_build" / "gnn" / "validation-receipt.json"
-MEASURED = ("lint", "test-fast", "test", "docs", "gnn", "notebooks")
+MEASURED = ("lint", "test-fast", "test", "docs", "gnn", "contract", "notebooks")
 LAST_SUMMARY = re.compile(r"Test Summary:")
 SUMMARY_ROW = re.compile(r"\|\s*(\d+)\s+(\d+)\s")
 

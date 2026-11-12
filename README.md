@@ -112,6 +112,7 @@ CI cannot diverge:
 ./run.sh test         # full suite, includes the static gates
 ./run.sh docs         # relative links + the generated gate table
 ./run.sh gnn          # GNN conformance against specs/gnn-pin.json
+./run.sh contract     # Education bundle, using the canonical courses checker
 ./run.sh notebooks    # execute both notebooks into _build/executed
 ./run.sh gate         # every gate arm, failures aggregated
 ```
@@ -127,6 +128,13 @@ network access so `./run.sh gnn` can provision one from the pin into
 not run; that is not a pass. The pin is recorded in
 [`specs/gnn-pin.json`](specs/gnn-pin.json) (schema `gnn-importer-pin/v1`), and
 bumping it is a deliberate change followed by a fresh validation run.
+
+The Education contract arm uses the canonical checker in a sibling `courses`
+checkout, or the checkout named by `EDUCATION_ROOT`. CI checks out the pinned
+revision declared in `.github/workflows/ci.yml` under `_build/courses` and sets
+that variable explicitly. The arm exits `2` if the checker is unavailable;
+it does not silently skip validation. See [specs/README.md](specs/README.md)
+for the bundle's source-backed objectives and prerequisite policy.
 
 Two environment notes from running the gates on macOS:
 
