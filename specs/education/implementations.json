@@ -1,0 +1,25 @@
+{
+  "schema": "education-contract/v1",
+  "provenance": {
+    "repository": "ActiveInferenceInstitute/ActiveInferenceImplementations",
+    "revision": "d2497d494403f92908455958daf0dad5ec975fab"
+  },
+  "units": [
+    {
+      "unit_id": "implementations-00-intro",
+      "title": "RxInfer.jl",
+      "objectives": [],
+      "prerequisites": [],
+      "source_path": "RxInfer.jl/00_intro.ipynb"
+    },
+    {
+      "unit_id": "implementations-01-message-passing",
+      "title": "Exploring Message Passing Schemes",
+      "objectives": [],
+      "prerequisites": [],
+      "source_path": "RxInfer.jl/01_message_passing.ipynb"
+    }
+  ],
+  "prerequisite_edges": [],
+  "glossary": []
+}
