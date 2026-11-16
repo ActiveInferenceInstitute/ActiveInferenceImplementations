@@ -38,13 +38,10 @@ Sections:
       `docs/repository-layout.md`, `docs/notebooks.md`, and
       `docs/gnn-conformance.md`; link the index from `README.md` and name the docs
       locations in `AGENTS.md`. No notebook or Julia execution was involved.
-- [ ] Keep `docs/repository-layout.md` and `docs/gnn-conformance.md` in step when the
-      notebook set, the GNN document, or the pin changes. It has already slipped:
-      `docs/gnn-conformance.md` (§ *How CI runs it*) and `.github/GNN.md:3` still
-      name a job key `gnn-conformance` with display name `gnn conformance
-      (pinned)`, while `.github/workflows/ci.yml` has declared a single job,
-      `gate`, since #11 (d2497d4) merged the two CI jobs. Owner: repository
-      maintainer; no external blocker.
+- [x] Corrected the stale CI job naming in `docs/gnn-conformance.md` and
+      `.github/GNN.md` to `gate` / `gates (julia 1.13, python 3.12)`; added the
+      existing `contract` arm to the documentation hub. Continuing upkeep
+      remains required when notebooks, specifications, or pins change.
 
 ### 2026-11-12 — one gate entry point, measured arms
 
@@ -100,6 +97,25 @@ Sections:
       exists. Upstream's `docs/downstream/importers.json` (observed 2026-11-12)
       still records this repository at `v5.0.3` and needs re-observation after the
       bump.
+
+### 2026-11-13 — bounded validator contract qualification
+
+- [x] I1–I5 focused contracts: explicit source selection, single-document JSON
+      receipts, owned archive cleanup, exact authored integer parsing, and
+      authored/configuration failure versus unavailable-runtime outcomes were
+      exercised through governed offline acceptance using the existing pinned
+      parser, actual Julia reader/static suite, and temporary Git fixtures.
+      This is not an aggregate `./run.sh gate` result or notebook execution.
+- [x] I6 — corrected notebook and guide coverage claims: reader agreement,
+      retired API-token guards, validator signposts, independent inference
+      recovery, and notebook execution are separate. Notebook code, outputs,
+      execution counts, and metadata remain preserved.
+- [ ] I-T17 — source-current measured arms remain separately admitted work;
+      no timing page or historical baseline was rewritten.
+- [ ] I-T22 — retain the current pin until qualified producer origin/content
+      evidence and deliberate consumer rollout are admitted. Release existence
+      alone is not rollout authority.
+- [ ] I-T24 — retain embedded outputs pending the maintainer's explicit policy.
 
 ---
 

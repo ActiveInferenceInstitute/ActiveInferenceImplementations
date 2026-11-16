@@ -13,8 +13,11 @@ repository's committed [`../Project.toml`](../Project.toml).
 
 The notebooks use the current RxInfer 6 API (`infer`, `MeanField`,
 `@initialization`, `@call_message_update_rule`, `free_energy`), not the retired
-reactive interface. [`../test/runtests.jl`](../test/runtests.jl) guards both the
-API use and the notebook signposts.
+reactive interface. [`../test/static_tests.jl`](../test/static_tests.jl) guards
+retired API tokens; the Python validator checks canonical-document signposts.
+[`../test/runtests.jl`](../test/runtests.jl) runs independent inference recovery.
+These checks do not execute the notebooks or compare their retained posteriors;
+headless notebook execution is a separate arm.
 
 ## Run them
 

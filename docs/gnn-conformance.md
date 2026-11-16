@@ -33,8 +33,8 @@ The gate compares the same declared scalars read three ways:
    [`../src/spec_reader.jl`](../src/spec_reader.jl), also included by the notebook
    and the test suite.
 
-Agreement across three readers is the point: the document cannot drift from what
-the notebook and the tests actually consume.
+Agreement covers the settings consumed by the reader. It does not execute the
+notebooks or establish posterior or retained-output parity.
 
 ## Verified source and digest checks
 
@@ -47,16 +47,33 @@ The validator accepts either a GNN git checkout or an installed pinned runtime:
   installed at the pinned revision; the distribution version and installed parser
   file digests are verified.
 
-The Julia reader is selected with `--julia` or `JULIA_BIN`. When a source is
-missing or the requested Julia binary is unavailable, the validator exits `2`.
+A sole explicit `--gnn-root` or `--gnn-runtime` wins over inherited source
+selectors; specifying both is an argparse usage error. With neither explicit
+selector, `GNN_RUNTIME_PYTHON` precedes `GNN_ROOT`. Invalid explicit sources
+never fall back. `--python` or `GNN_PYTHON` selects a checkout's interpreter.
+
+The Julia reader is selected with `--julia` or `JULIA_BIN`. Observation count,
+iteration count, and seed are parsed from authored tokens exactly: integer
+decimal/exponent spellings are accepted; fractions, nonfinite values, and
+out-of-`Int` values are rejected with field/path/token diagnostics.
+
+Git archives and extracted pinned source live only for the validator's owned
+workspace; caller-owned trees remain intact on success and failure.
 
 ## Exit codes
 
 | Code | Meaning |
 | --- | --- |
 | `0` | Pass: the document conforms and the readers agree. |
-| `1` | Conformance failure. |
+| `1` | Recognized authored/configuration or conformance failure, with a failure receipt. |
 | `2` | The pinned runtime, pinned checkout, or requested Julia reader is unavailable. The check was **not run**, never a pass. |
+
+In JSON mode, stdout is one whole receipt object matching the saved receipt,
+without human success prose. Pre-probe failures retain null unavailable parser
+metadata. Genuine unavailability writes no new validation receipt: use a fresh
+destination rather than trusting an old file. Ordinary argparse usage errors
+also normally exit `2`, but are invocation errors, not validation receipts.
+Unexpected programming/protocol failures remain visible.
 
 ## Run it locally
 
@@ -92,8 +109,8 @@ validator invocation is
 
 ## How CI runs it
 
-The job key is `gnn-conformance`; its display name is
-`gnn conformance (pinned)`, and both live in
+The job key is `gate`; its display name is
+`gates (julia 1.13, python 3.12)`, and both live in
 [`../.github/workflows/ci.yml`](../.github/workflows/ci.yml). The workflow does
 not use the `ActiveInferenceInstitute/.github` composite action; it pins
 `astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2` and relies on
