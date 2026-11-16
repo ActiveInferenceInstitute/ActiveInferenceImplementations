@@ -57,23 +57,76 @@ function spec_section(path::AbstractString, name::AbstractString)::String
     return String(SubString(body, 1, first(following) - 1))
 end
 
+function _spec_scalar_token(section::AbstractString, path::AbstractString, key::AbstractString)
+    pattern = Regex("(?m)^[ \\t]*" * key * "[ \\t]*=[ \\t]*\\{[ \\t]*\\(([^)]*)\\)[ \\t]*\\}")
+    found = match(pattern, section)
+    found === nothing && throw(
+        ArgumentError("scalar '$key' is not declared in InitialParameterization of $path")
+    )
+    return strip(found.captures[1])
+end
+
+function _spec_float(token::AbstractString, path::AbstractString, key::AbstractString)::Float64
+    value = tryparse(Float64, token)
+    value === nothing && throw(
+        ArgumentError("declared value for '$key' in $path is not a number: $token")
+    )
+    return value
+end
+
+_spec_integer_error(path, key, token) =
+    ArgumentError("declared value for '$key' in $path must be an exact finite Int: $token")
+
+function _spec_integer(token::AbstractString, path::AbstractString, key::AbstractString)::Int
+    value = tryparse(Int, token)
+    value !== nothing && return value
+
+    # Normalize decimal/exponent spellings without rounding through Float64 or
+    # constructing arbitrarily large powers. The common integer spelling above
+    # needs neither this normalization nor checked digit accumulation.
+    number = match(r"^([+-]?)([0-9]*)(?:\.([0-9]*))?(?:[eE]([+-]?[0-9]+))?$", token)
+    number === nothing && throw(_spec_integer_error(path, key, token))
+    sign, whole, fraction, exponent_token = number.captures
+    digits = fraction === nothing ? whole : whole * fraction
+    isempty(digits) && throw(_spec_integer_error(path, key, token))
+    first_nonzero = findfirst(c -> c != '0', digits)
+    first_nonzero === nothing && return 0
+    last_nonzero = findlast(c -> c != '0', digits)
+    exponent = exponent_token === nothing ? 0 : tryparse(Int, exponent_token)
+    exponent === nothing && throw(_spec_integer_error(path, key, token))
+    fraction_length = fraction === nothing ? 0 : ncodeunits(fraction)
+    minimum_exponent = fraction_length - (ncodeunits(digits) - last_nonzero)
+    maximum_exponent = minimum_exponent + ndigits(typemax(Int)) -
+                       (last_nonzero - first_nonzero + 1)
+    minimum_exponent <= exponent <= maximum_exponent ||
+        throw(_spec_integer_error(path, key, token))
+
+    value = 0
+    try
+        for index in first_nonzero:last_nonzero
+            digit = Int(codeunit(digits, index)) - Int('0')
+            value = Base.Checked.checked_add(
+                Base.Checked.checked_mul(value, 10), sign == "-" ? -digit : digit
+            )
+        end
+        for _ in 1:(exponent - minimum_exponent)
+            value = Base.Checked.checked_mul(value, 10)
+        end
+    catch err
+        err isa OverflowError || rethrow()
+        throw(_spec_integer_error(path, key, token))
+    end
+    return value
+end
+
 """
     spec_scalar(path, key) -> Float64
 
 Return the number declared for `key` in the `InitialParameterization` section.
 """
 function spec_scalar(path::AbstractString, key::AbstractString)::Float64
-    section = spec_section(path, "InitialParameterization")
-    pattern = Regex("(?m)^[ \\t]*" * key * "[ \\t]*=[ \\t]*\\{[ \\t]*\\(([^)]*)\\)[ \\t]*\\}")
-    found = match(pattern, section)
-    found === nothing && throw(
-        ArgumentError("scalar '$key' is not declared in InitialParameterization of $path")
-    )
-    value = tryparse(Float64, strip(found.captures[1]))
-    value === nothing && throw(
-        ArgumentError("declared value for '$key' in $path is not a number: $(found.captures[1])")
-    )
-    return value
+    token = _spec_scalar_token(spec_section(path, "InitialParameterization"), path, key)
+    return _spec_float(token, path, key)
 end
 
 """
@@ -91,18 +144,11 @@ end
 Read the mean-field VMP model parameters declared by the GNN document.
 """
 function spec_parameters(path::AbstractString = SPEC_PATH)::GNNSpecParameters
-    values = Dict(key => spec_scalar(path, key) for key in SPEC_SCALAR_KEYS)
-    return GNNSpecParameters(
-        values["m_prior_mean"],
-        values["m_prior_variance"],
-        values["w_prior_shape"],
-        values["w_prior_rate"],
-        values["data_mean"],
-        values["data_precision"],
-        Int(round(values["n_observations"])),
-        Int(round(values["vmp_iterations"])),
-        Int(round(values["seed"])),
-    )
+    section = spec_section(path, "InitialParameterization")
+    tokens = map(key -> _spec_scalar_token(section, path, key), SPEC_SCALAR_KEYS)
+    scalars = ntuple(i -> _spec_float(tokens[i], path, SPEC_SCALAR_KEYS[i]), 6)
+    integers = ntuple(i -> _spec_integer(tokens[i + 6], path, SPEC_SCALAR_KEYS[i + 6]), 3)
+    return GNNSpecParameters(scalars..., integers...)
 end
 
 """

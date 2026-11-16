@@ -21,11 +21,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from gnn import __version__ as gnn_version
-from gnn.parsers.markdown_parser import MarkdownGNNParser
-from gnn.validation.consistency_checker import check_consistency
-from gnn.validation.orientation import check_b_orientation
-from gnn.validation.semantic_validator import SemanticValidator
+
+class DocumentError(ValueError):
+    """An explicit document-read or parser-declared rejection."""
+
+
+class RuntimeUnavailable(RuntimeError):
+    """The GNN parser or an import dependency is unavailable."""
 
 
 def _jsonable(value: Any) -> Any:
@@ -41,10 +43,26 @@ def _jsonable(value: Any) -> Any:
 def probe(spec: Path) -> dict[str, Any]:
     """Parse and validate ``spec`` with the imported (pinned) parser."""
 
+    try:
+        text = spec.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise DocumentError(f"cannot read specification {spec}: {exc}") from exc
+    try:
+        from gnn import __version__ as gnn_version
+        from gnn.parsers.markdown_parser import MarkdownGNNParser
+        from gnn.validation.consistency_checker import check_consistency
+        from gnn.validation.orientation import check_b_orientation
+        from gnn.validation.semantic_validator import SemanticValidator
+    except ImportError as exc:
+        raise RuntimeUnavailable(f"cannot import the GNN parser dependencies: {exc}") from exc
+
     parser = MarkdownGNNParser()
     result = parser.parse_file(str(spec))
+    if not result.success:
+        errors = "; ".join(str(error) for error in result.errors) or "no parser diagnostic"
+        raise DocumentError(f"pinned parser rejected {spec}: {errors}")
     model = result.model
-    semantic = SemanticValidator().validate(spec.read_text(encoding="utf-8"))
+    semantic = SemanticValidator().validate(text)
     orientation = check_b_orientation(spec)
     consistency = check_consistency(spec)
     return {
@@ -95,13 +113,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--spec", type=Path, required=True)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
-    payload = probe(args.spec)
+    status = 0
+    try:
+        payload = probe(args.spec)
+    except DocumentError as exc:
+        payload = {"probe_error": {"kind": "input", "message": str(exc)}}
+        status = 1
+    except RuntimeUnavailable as exc:
+        payload = {"probe_error": {"kind": "unavailable", "message": str(exc)}}
+        status = 2
     text = json.dumps(payload, indent=2, sort_keys=True) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(text, encoding="utf-8")
     sys.stdout.write(text)
-    return 0
+    return status
 
 
 if __name__ == "__main__":

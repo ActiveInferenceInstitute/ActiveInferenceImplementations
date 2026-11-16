@@ -1,8 +1,9 @@
 # GNN conformance
 
-The job key is `gnn-conformance`, its display name is
-`gnn conformance (pinned)`, and both are defined in
-[`.github/workflows/ci.yml`](workflows/ci.yml). The job calls `./run.sh gnn`.
+The job key is `gate`, its display name is
+`gates (julia 1.13, python 3.12)`, and both are defined in
+[`.github/workflows/ci.yml`](workflows/ci.yml). It calls `./run.sh gnn` among
+the shared gate arms; the arm name is not a separate CI job.
 
 It reads [`../specs/gnn-pin.json`](../specs/gnn-pin.json), the canonical pin
 record with schema `gnn-importer-pin/v1`, which pins

@@ -30,9 +30,11 @@ the dependency-free Julia reader in ``src/spec_reader.jl``
 The pin's ``language_version`` (for example ``GNN v1.1``) must equal the version
 the pinned parser reports for the document (``language-version-mismatch``).
 
-Exit codes: ``0`` pass, ``1`` conformance failure, ``2`` pinned runtime, pinned
-checkout, or requested Julia reader unavailable (the run is then explicitly
-*not run*, never a pass).
+Exit codes: ``0`` pass; ``1`` recognized authored/configuration or conformance
+failure; ``2`` genuine pinned-runtime/checkout/Julia unavailability (*not run*,
+never a pass). Ordinary argparse usage errors are invocation failures, not
+validation receipts. Use fresh receipt destinations: unavailability writes no
+new receipt. JSON stdout is one object matching the saved validation receipt.
 
 Usage:
 
@@ -50,6 +52,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -120,13 +123,32 @@ NOTEBOOKS = {
     "RxInfer.jl/01_message_passing.ipynb": ("specs/normal_vmp.gnn.md", "spec_parameters()"),
 }
 SCALAR_PATTERN = re.compile(r"(?m)^[ \t]*([A-Za-z_]\w*)[ \t]*=[ \t]*\{[ \t]*\(([^)]*)\)[ \t]*\}")
+READER_INPUT_PREFIX = "gnn-reader-input-error:"
 READER_EXPRESSION = (
-    'include(joinpath(pwd(), "src", "spec_reader.jl")); print(spec_summary(ARGS[1]))'
+    'include(joinpath(pwd(), "src", "spec_reader.jl")); '
+    'try print(spec_summary(ARGS[1])); catch err; '
+    'if err isa ArgumentError || err isa SystemError; '
+    f'println(stderr, "{READER_INPUT_PREFIX}", sprint(showerror, err)); exit(1); '
+    'else rethrow(); end; end'
 )
 
 
 class Unavailable(RuntimeError):
     """Raised when the pinned parser runtime or checkout is not available."""
+
+
+class InvalidInput(ValueError):
+    """Raised for a recognized authored-document or supplied-pin failure."""
+
+
+def _run(argv: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+    try:
+        return subprocess.run(
+            argv, stdin=subprocess.DEVNULL, capture_output=True, text=True,
+            check=False, **kwargs,
+        )
+    except OSError as exc:
+        raise Unavailable(f"cannot start {argv[0]!r}: {exc}") from exc
 
 
 def _sha256(path: Path) -> str:
@@ -138,12 +160,32 @@ def _sha256(path: Path) -> str:
 
 
 def load_pin(path: Path) -> dict[str, Any]:
-    """Return the recorded GNN pin, rejecting a record without the required keys."""
+    """Read the consumed pin fields, distinguishing bad input from unavailable code."""
 
-    pin = json.loads(path.read_text(encoding="utf-8"))
-    for key in ("repository", "tag", "commit", "language_version", "parser_files"):
-        if key not in pin:
-            raise Unavailable(f"pin record {path} is missing the '{key}' field")
+    try:
+        pin = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise InvalidInput(f"cannot read pin record {path}: {exc}") from exc
+    if not isinstance(pin, dict):
+        raise InvalidInput(f"pin record {path} must be a JSON object")
+    for key in ("repository", "tag", "commit", "language_version"):
+        if not isinstance(pin.get(key), str) or not pin[key].strip():
+            raise InvalidInput(f"pin record {path} requires a nonempty string '{key}'")
+    if re.fullmatch(r"[0-9a-f]{40}", pin["commit"]) is None:
+        raise InvalidInput(f"pin record {path} requires a full hexadecimal commit")
+    files = pin.get("parser_files")
+    if not isinstance(files, dict) or not files:
+        raise InvalidInput(f"pin record {path} requires a nonempty 'parser_files' object")
+    for relative, digest in files.items():
+        if (
+            not isinstance(relative, str)
+            or not relative.startswith(PACKAGE_PREFIX)
+            or relative == PACKAGE_PREFIX
+            or ".." in Path(relative).parts
+        ):
+            raise InvalidInput(f"pin record {path} has an invalid parser path: {relative!r}")
+        if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+            raise InvalidInput(f"pin record {path} has an invalid SHA-256 for {relative!r}")
     return pin
 
 
@@ -156,7 +198,10 @@ def _verify_digests(package_dir: Path, pin: dict[str, Any], *, origin: str) -> d
         path = package_dir / suffix
         if not path.is_file():
             raise Unavailable(f"pinned parser file is missing from {origin}: {suffix}")
-        observed[relative] = _sha256(path)
+        try:
+            observed[relative] = _sha256(path)
+        except OSError as exc:
+            raise Unavailable(f"cannot read pinned parser file {path}: {exc}") from exc
         if observed[relative] != expected:
             raise Unavailable(
                 f"pinned parser file digest mismatch for {suffix} in {origin}: "
@@ -165,8 +210,10 @@ def _verify_digests(package_dir: Path, pin: dict[str, Any], *, origin: str) -> d
     return observed
 
 
-def materialize_pin(gnn_root: Path, pin: dict[str, Any]) -> tuple[Path, str]:
-    """Return a directory holding the pinned source tree and how it was obtained."""
+def materialize_pin(
+    gnn_root: Path, pin: dict[str, Any], *, workspace: Path
+) -> tuple[Path, str]:
+    """Return pinned sources; only materialization inside ``workspace`` is owned."""
 
     if not gnn_root.is_dir():
         raise Unavailable(f"GNN checkout is not a directory: {gnn_root}")
@@ -175,12 +222,7 @@ def materialize_pin(gnn_root: Path, pin: dict[str, Any]) -> tuple[Path, str]:
         return gnn_root, f"digest-verified source tree {gnn_root} (no git metadata)"
 
     commit = pin["commit"]
-    resolved = subprocess.run(
-        ["git", "-C", str(gnn_root), "rev-parse", f"{commit}^{{commit}}"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    resolved = _run(["git", "-C", str(gnn_root), "rev-parse", f"{commit}^{{commit}}"])
     if resolved.returncode != 0:
         raise Unavailable(f"pinned commit {commit} is not present in {gnn_root}")
     if resolved.stdout.strip() != commit:
@@ -188,28 +230,29 @@ def materialize_pin(gnn_root: Path, pin: dict[str, Any]) -> tuple[Path, str]:
             f"resolved commit {resolved.stdout.strip()} differs from the pin {commit}"
         )
 
-    target = Path(tempfile.mkdtemp(prefix="aii-gnn-pin-"))
-    archive = target / "pinned.tar"
-    completed = subprocess.run(
-        ["git", "-C", str(gnn_root), "archive", "--format=tar", f"--output={archive}", commit],
-        capture_output=True,
-        text=True,
-        check=False,
+    target = workspace / "pinned-source"
+    target.mkdir()
+    archive = workspace / "pinned.tar"
+    completed = _run(
+        ["git", "-C", str(gnn_root), "archive", "--format=tar", f"--output={archive}", commit]
     )
     if completed.returncode != 0:
         raise Unavailable(f"git archive failed for {commit}: {completed.stderr.strip()}")
-    with tarfile.open(archive) as handle:
-        try:
-            handle.extractall(target, filter="data")
-        except TypeError:  # pragma: no cover - Python < 3.12 fallback
-            handle.extractall(target)
+    try:
+        with tarfile.open(archive) as handle:
+            try:
+                handle.extractall(target, filter="data")
+            except TypeError:  # Python < 3.12, as supported by the original reader
+                handle.extractall(target)
+    except (OSError, tarfile.TarError) as exc:
+        raise Unavailable(f"cannot extract pinned archive of {commit}: {exc}") from exc
     archive.unlink()
     _verify_digests(target / "src" / "gnn", pin, origin=f"archive of {commit}")
     return target, f"git archive of {commit}"
 
 
 def run_probe(python: str, spec: Path, output: Path, *, source: Path | None) -> dict[str, Any]:
-    """Run the pinned parser probe in a subprocess and return its payload."""
+    """Run the probe, honoring only its explicit expected-error envelope."""
 
     environment = dict(os.environ)
     if source is not None:
@@ -217,48 +260,66 @@ def run_probe(python: str, spec: Path, output: Path, *, source: Path | None) -> 
         environment["PYTHONPATH"] = str(source / "src") + (
             os.pathsep + existing if existing else ""
         )
-    completed = subprocess.run(
+    completed = _run(
         [python, str(PROBE), "--spec", str(spec), "--output", str(output)],
-        capture_output=True,
-        text=True,
-        check=False,
         env=environment,
     )
+    detail = (completed.stderr or completed.stdout).strip().splitlines()
+    tail = " | ".join(detail[-3:]) if detail else "no output"
+    try:
+        payload = json.loads(output.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"pinned parser probe produced no valid payload: {tail}") from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError("pinned parser probe payload must be an object")
+    if "probe_error" in payload:
+        error = payload["probe_error"]
+        if not isinstance(error, dict) or not isinstance(error.get("message"), str):
+            raise RuntimeError("pinned parser probe returned an invalid error envelope")
+        if error.get("kind") == "input" and completed.returncode == 1:
+            raise InvalidInput(error["message"])
+        if error.get("kind") == "unavailable" and completed.returncode == 2:
+            raise Unavailable(error["message"])
+        raise RuntimeError(f"pinned parser probe returned an unexpected error: {error}")
     if completed.returncode != 0:
-        detail = (completed.stderr or completed.stdout).strip().splitlines()
-        tail = " | ".join(detail[-3:]) if detail else "no output"
-        raise Unavailable(
-            f"pinned parser probe failed with {python}: {tail}. Provide an interpreter that "
-            "has the GNN parser dependencies (a runtime installed from the pinned revision) "
-            "via --python/--gnn-runtime."
-        )
-    return json.loads(output.read_text(encoding="utf-8"))
+        raise RuntimeError(f"pinned parser probe failed with {python}: {tail}")
+    return payload
 
 
 def run_julia_reader(julia: str, spec: Path) -> dict[str, str]:
-    """Run the dependency-free Julia reader on ``spec`` and return its summary."""
+    """Distinguish explicit reader input rejection from startup/programming failures."""
 
     if shutil.which(julia) is None and not Path(julia).is_file():
         raise Unavailable(f"julia reader interpreter not found: {julia}")
-    completed = subprocess.run(
+    completed = _run(
         [julia, "--startup-file=no", "--history-file=no", "-e", READER_EXPRESSION, str(spec)],
         cwd=ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
     )
     if completed.returncode != 0:
+        for line in completed.stderr.splitlines():
+            if completed.returncode == 1 and line.startswith(READER_INPUT_PREFIX):
+                raise InvalidInput(line[len(READER_INPUT_PREFIX):].strip())
         detail = (completed.stderr or completed.stdout).strip().splitlines()
         tail = " | ".join(detail[-3:]) if detail else "no output"
-        raise Unavailable(f"julia reader failed with {julia}: {tail}")
+        raise RuntimeError(f"julia reader failed with {julia}: {tail}")
     summary = {}
     for line in completed.stdout.splitlines():
         if "=" in line:
             key, value = line.split("=", 1)
             summary[key.strip()] = value.strip()
     if not summary:
-        raise Unavailable("the julia reader produced no summary lines")
+        raise RuntimeError("the julia reader produced no summary lines")
     return summary
+
+
+def _scalar_number(value: object, *, name: str, reader: str) -> float:
+    try:
+        number = float(value)
+    except (ValueError, TypeError, OverflowError) as exc:
+        raise InvalidInput(f"{reader} value for {name!r} is not a finite number: {value!r}") from exc
+    if not math.isfinite(number):
+        raise InvalidInput(f"{reader} value for {name!r} is not finite: {value!r}")
+    return number
 
 
 def declared_scalars(spec_text: str) -> dict[str, float]:
@@ -268,7 +329,7 @@ def declared_scalars(spec_text: str) -> dict[str, float]:
     if match is None:
         return {}
     return {
-        name: float(value.strip())
+        name: _scalar_number(value.strip(), name=name, reader="authored")
         for name, value in SCALAR_PATTERN.findall(match.group(1))
     }
 
@@ -380,11 +441,9 @@ def conformance_failures(
     if connections != CONNECTIONS:
         failures.append(f"declared connections {connections} differ from {CONNECTIONS}")
 
+    readers = (("regex", declared_scalars(spec_text)), ("parser", parsed_scalars(parser)))
     for name, expected in SCALARS.items():
-        for label, observed in (
-            ("regex", declared_scalars(spec_text)),
-            ("parser", parsed_scalars(parser)),
-        ):
+        for label, observed in readers:
             if observed.get(name) != expected:
                 failures.append(
                     f"{label} reader sees {name}={observed.get(name)} instead of {expected}"
@@ -397,7 +456,7 @@ def conformance_failures(
             )
         for name, expected in SCALARS.items():
             observed = julia_summary.get(name)
-            if observed is None or float(observed) != float(expected):
+            if observed is None or _scalar_number(observed, name=name, reader="julia") != expected:
                 failures.append(
                     f"julia reader sees {name}={observed} instead of {expected} "
                     "(src/spec_reader.jl must read the committed declarations)"
@@ -439,15 +498,14 @@ def main(argv: list[str] | None = None) -> int:
     """Validate the committed specification against the pinned parser."""
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
+    sources = parser.add_mutually_exclusive_group()
+    sources.add_argument(
         "--gnn-root",
         type=Path,
-        default=Path(os.environ["GNN_ROOT"]) if os.environ.get("GNN_ROOT") else None,
         help="Generalized_Notation_Notation checkout (default: $GNN_ROOT)",
     )
-    parser.add_argument(
+    sources.add_argument(
         "--gnn-runtime",
-        default=os.environ.get("GNN_RUNTIME_PYTHON"),
         help="interpreter with the pinned GNN distribution installed",
     )
     parser.add_argument(
@@ -466,20 +524,33 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="print the receipt to stdout")
     args = parser.parse_args(argv)
 
-    pin = load_pin(args.pin)
-    if args.gnn_root is None and not args.gnn_runtime:
-        print(
-            "gnn validation not run: supply --gnn-root/GNN_ROOT or --gnn-runtime/"
-            "GNN_RUNTIME_PYTHON",
-            file=sys.stderr,
-        )
-        return 2
+    if args.gnn_root is None and args.gnn_runtime is None:
+        args.gnn_runtime = os.environ.get("GNN_RUNTIME_PYTHON") or None
+        if args.gnn_runtime is None and os.environ.get("GNN_ROOT"):
+            args.gnn_root = Path(os.environ["GNN_ROOT"])
 
-    with tempfile.TemporaryDirectory(prefix="aii-gnn-") as directory:
-        output = Path(directory) / "probe.json"
+    pin = None
+    payload = None
+    origin = None
+    julia_summary = None
+    try:
+        pin = load_pin(args.pin)
+        if args.gnn_root is None and args.gnn_runtime is None:
+            raise Unavailable(
+                "supply --gnn-root/GNN_ROOT or --gnn-runtime/GNN_RUNTIME_PYTHON"
+            )
         try:
+            spec_text = args.spec.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise InvalidInput(f"cannot read specification {args.spec}: {exc}") from exc
+        # Diagnose authored numeric rejection before a parser can turn it into
+        # an untyped subprocess failure.
+        declared_scalars(spec_text)
+        with tempfile.TemporaryDirectory(prefix="aii-gnn-") as directory:
+            workspace = Path(directory)
+            output = workspace / "probe.json"
             if args.gnn_root is not None:
-                source, origin = materialize_pin(args.gnn_root, pin)
+                source, origin = materialize_pin(args.gnn_root, pin, workspace=workspace)
                 payload = run_probe(
                     args.python or sys.executable, args.spec, output, source=source
                 )
@@ -489,38 +560,33 @@ def main(argv: list[str] | None = None) -> int:
                 package_dir = Path(str(payload["gnn_module"])).resolve().parent
                 _verify_digests(package_dir, pin, origin=args.gnn_runtime)
                 origin = f"installed runtime {args.gnn_runtime} ({package_dir})"
-        except Unavailable as exc:
-            print(f"gnn validation not run: {exc}", file=sys.stderr)
-            return 2
-
-        julia_summary = None
-        if args.julia:
-            try:
+            if args.julia:
                 julia_summary = run_julia_reader(args.julia, args.spec)
-            except Unavailable as exc:
-                print(f"gnn validation not run: {exc}", file=sys.stderr)
-                return 2
+            failures = conformance_failures(
+                payload, pin=pin, source=source, spec_text=spec_text,
+                julia_summary=julia_summary,
+            )
+    except InvalidInput as exc:
+        failures = [f"input-error: {exc}"]
+    except Unavailable as exc:
+        print(f"gnn validation not run: {exc}", file=sys.stderr)
+        return 2
 
-        failures = conformance_failures(
-            payload,
-            pin=pin,
-            source=source,
-            spec_text=args.spec.read_text(encoding="utf-8"),
-            julia_summary=julia_summary,
-        )
-
+    parser_result = payload["parser"] if payload is not None else {}
     receipt = {
         "ok": not failures,
         "spec": str(args.spec),
         "pin": pin,
         "pin_source": origin,
-        "gnn_version": payload["gnn_version"],
-        "gnn_module": payload["gnn_module"],
-        "language_version": pin["language_version"],
-        "parser_language_version": payload["parser"].get("version"),
-        "parser_success": payload["parser"]["success"],
-        "semantic_valid": payload["semantic"].get("is_valid"),
-        "consistency_score": payload["consistency"].get("consistency_score"),
+        "gnn_version": payload["gnn_version"] if payload is not None else None,
+        "gnn_module": payload["gnn_module"] if payload is not None else None,
+        "language_version": pin["language_version"] if pin is not None else None,
+        "parser_language_version": parser_result.get("version"),
+        "parser_success": parser_result.get("success"),
+        "semantic_valid": payload["semantic"].get("is_valid") if payload is not None else None,
+        "consistency_score": (
+            payload["consistency"].get("consistency_score") if payload is not None else None
+        ),
         "julia_reader": julia_summary,
         "failures": failures,
     }
@@ -533,15 +599,16 @@ def main(argv: list[str] | None = None) -> int:
         for message in failures:
             print(f"  {message}", file=sys.stderr)
         return 1
-    reader = (
-        f"and the julia reader ({julia_summary['model_name']})"
-        if julia_summary is not None
-        else "and no julia reader was requested"
-    )
-    print(
-        f"gnn validation passed: {args.spec} parsed by gnn {payload['gnn_version']} "
-        f"({origin}); {reader}; receipt {args.receipt}"
-    )
+    if not args.json:
+        reader = (
+            f"and the julia reader ({julia_summary['model_name']})"
+            if julia_summary is not None
+            else "and no julia reader was requested"
+        )
+        print(
+            f"gnn validation passed: {args.spec} parsed by gnn {payload['gnn_version']} "
+            f"({origin}); {reader}; receipt {args.receipt}"
+        )
     return 0
 
 

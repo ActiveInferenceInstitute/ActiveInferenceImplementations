@@ -45,10 +45,12 @@ Julia package to install; `Project.toml` is the notebook environment.
 3. [`scripts/validate_gnn_spec.py`](../scripts/validate_gnn_spec.py) compares the
    Julia reader, its own regular-expression reader, and the pinned upstream GNN
    parser. See [`gnn-conformance.md`](gnn-conformance.md).
-4. [`test/static_tests.jl`](../test/static_tests.jl) checks the declarations and
-   the notebook signposts without loading RxInfer;
-   [`test/runtests.jl`](../test/runtests.jl) includes it and adds the recovered
-   posterior checks.
+4. [`test/static_tests.jl`](../test/static_tests.jl) checks declarations, exact
+   integer parsing and refusals, seeded data, and retired notebook API tokens
+   without loading RxInfer. The Python validator checks canonical-document
+   signposts. [`test/runtests.jl`](../test/runtests.jl) includes the static
+   checks and adds independent recovered-posterior checks; neither Julia suite
+   executes the notebooks or compares their retained outputs.
 5. [`RxInfer.jl/01_message_passing.ipynb`](../RxInfer.jl/01_message_passing.ipynb)
    runs the model; [`RxInfer.jl/00_intro.ipynb`](../RxInfer.jl/00_intro.ipynb)
    teaches the Beta-Bernoulli foundation and points at its canonical GNN document

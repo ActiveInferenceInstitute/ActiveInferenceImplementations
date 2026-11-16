@@ -37,6 +37,7 @@ calls the same arms. `./run.sh --list` prints them.
 | `test` | The full suite; includes the static gates and the mean-field VMP inference checks |
 | `docs` | Relative links and heading anchors, plus the generated gate table |
 | `gnn` | GNN conformance against the pin record |
+| `contract` | Education bundle validated by the canonical courses checker; a missing checker exits `2` rather than silently skipping |
 | `notebooks` | Both notebooks executed into `_build/executed` |
 
 `./run.sh` with no argument runs `test-fast`. The measured per-arm numbers are

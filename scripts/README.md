@@ -14,9 +14,19 @@ dependency-free Julia reader in `src/spec_reader.jl`. The pin's
 document (`language-version-mismatch`); `./run.sh gnn` then runs the validator's
 offline unit tests (`test/test_validate_gnn_spec.py`).
 
-Exit codes: `0` pass, `1` conformance failure, `2` pinned runtime, pinned
-checkout, or requested Julia reader unavailable. Exit `2` means the check was
-**not run**, never a pass.
+Exit codes: `0` pass; `1` recognized authored/configuration or conformance
+failure, with a failure receipt; `2` genuine runtime/checkout/Julia
+unavailability, meaning **not run**, never a pass. JSON mode emits exactly one
+stdout object matching the saved receipt; pre-probe metadata may be null.
+Unavailability writes no new receipt, so always use a fresh destination.
+Argparse usage errors are invocation failures, not validation receipts;
+unexpected programming/protocol failures remain visible.
+
+A sole explicit source selector wins over inherited values. With no explicit
+selector, `GNN_RUNTIME_PYTHON` precedes `GNN_ROOT`; two explicit selectors are a
+usage error, and an invalid explicit source never falls back. `--python` or
+`GNN_PYTHON` selects the checkout interpreter. Owned Git archives/extraction
+are cleaned on every exit; caller-owned source trees are preserved.
 
 Usage (from the repository root):
 
