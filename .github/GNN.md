@@ -7,8 +7,8 @@ the shared gate arms; the arm name is not a separate CI job.
 
 It reads [`../specs/gnn-pin.json`](../specs/gnn-pin.json), the canonical pin
 record with schema `gnn-importer-pin/v1`, which pins
-`ActiveInferenceInstitute/Generalized_Notation_Notation` at `v5.0.3`
-(`8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1`).
+`ActiveInferenceInstitute/Generalized_Notation_Notation` at `v5.1.0`
+(`75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf`).
 
 The arm installs that commit into its own runtime (or uses
 `$GNN_RUNTIME_PYTHON`, or a `$GNN_ROOT` checkout), verifies the recorded parser

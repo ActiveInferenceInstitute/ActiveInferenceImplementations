@@ -11,7 +11,7 @@ document and its readers agree.
 
 [`../specs/gnn-pin.json`](../specs/gnn-pin.json) is the canonical pin record,
 schema `gnn-importer-pin/v1`. It records the
-repository, tag `v5.0.3`, commit `8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1`,
+repository, tag `v5.1.0`, commit `75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf`,
 GNN language version, recording date, and the SHA-256 digests of five parser
 files. The validator reads these exact filenames; it does not enumerate the
 directory. Bumping the pin is a deliberate paired change: update the commit and
