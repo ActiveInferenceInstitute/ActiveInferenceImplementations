@@ -56,8 +56,8 @@ records and the shell script.
   how to run them.
 - [`../specs/README.md`](../specs/README.md) — the GNN document and the pin.
 - [`../specs/gnn-pin.json`](../specs/gnn-pin.json) — the canonical pin record,
-  schema `gnn-importer-pin/v1` (tag `v5.0.3`, commit
-  `8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1`).
+  schema `gnn-importer-pin/v1` (tag `v5.1.0`, commit
+  `75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf`).
 - [`../.github/GNN.md`](../.github/GNN.md) — what the conformance job parses.
 - [`../src/README.md`](../src/README.md) — the dependency-free Julia spec reader.
 - [`../scripts/README.md`](../scripts/README.md) — validation, documentation and

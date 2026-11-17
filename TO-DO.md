@@ -63,8 +63,9 @@ Sections:
       and `scripts/measure_gates.py --check` asserts only that every
       `./run.sh --list` arm has a row, so the stale environment block still passes
       the docs arm. Refresh with `python3 scripts/measure_gates.py` on a clean main
-      checkout. Owner: repository maintainer; needs a host with Julia 1.13, `uv`,
-      and network access for the GNN runtime.
+      checkout. Its `gnn` row still reads `gnn 5.0.3 (pin 8f293d9ba810)`; the
+      same refresh records the `v5.1.0` pin. Owner: repository maintainer; needs
+      a host with Julia 1.13, `uv`, and network access for the GNN runtime.
 
 ### 2026-11-12 — to-do truth pass
 
@@ -81,22 +82,19 @@ Sections:
 - [x] ✓ Checked for a `pymdp` / `inferactively-pymdp` dependency: there is none.
       The Python surface is `scripts/*.py` on the standard library, and the
       notebooks are Julia, so no 1.0.5 pin applies here.
-- [ ] Raise the GNN pin from `v5.0.3` to the importer release `v5.1.0`.
-      `specs/gnn-pin.json` records `v5.0.3` at
-      `8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1`; `v5.1.0` is
-      `75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf` ("Release GNN 5.1.0 with the
-      downstream importer registry", GNN #385) and is already pinned by
-      ActInf_RxInfer, ActiveBlockference, active_inference_power and pymdp. Four of
-      the five recorded parser digests change at that commit (`src/gnn/__init__.py`,
-      `src/gnn/parsers/__init__.py`, `common.py`, `markdown_parser.py`;
-      `markdown_parser_parameter.py` is unchanged), so tag, commit and digests move
-      as one change; the `v5.0.3` / `8f293d9b` strings at `.github/GNN.md:9`,
-      `docs/README.md:58`, `docs/gnn-conformance.md:14`, `docs/gate-timings.md:40`
-      and in `RxInfer.jl/01_message_passing.ipynb` follow, then `./run.sh gnn` is
-      re-run. Owner: repository maintainer; no external blocker — the release
-      exists. Upstream's `docs/downstream/importers.json` (observed 2026-11-12)
-      still records this repository at `v5.0.3` and needs re-observation after the
-      bump.
+- [x] ✓ Raised the GNN pin from `v5.0.3` to the importer release `v5.1.0`
+      (2026-11-16). `specs/gnn-pin.json` records tag `v5.1.0` at
+      `75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf`, the commit the annotated tag
+      resolves to, with the four changed parser digests recomputed from that
+      commit's exact blobs (`markdown_parser_parameter.py` is unchanged). The
+      pin strings in `.github/GNN.md`, `docs/README.md`,
+      `docs/gnn-conformance.md` and `RxInfer.jl/01_message_passing.ipynb`
+      moved with it. `docs/gate-timings.md` is generated, so its `gnn` row
+      (`gnn 5.0.3`, measured 2026-11-12) is not hand-edited; it moves with the
+      open regeneration item above. `docs/gate-baseline.md` keeps its historical
+      pre-change row.
+      Upstream's `docs/downstream/importers.json` row needs re-observation once
+      this lands.
 
 ### 2026-11-13 — bounded validator contract qualification
 
